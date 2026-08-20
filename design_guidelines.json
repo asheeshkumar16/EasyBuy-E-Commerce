@@ -1,0 +1,106 @@
+{
+  "theme": "Minimal Light Theme (Editorial / High-Fashion)",
+  "vibe": "Premium, stylish, minimal, inspired by Zara/H&M, editorial, crisp, architectural.",
+  "colors": {
+    "primary_background": "#FFFFFF",
+    "secondary_background": "#FAFAFA",
+    "primary_text": "#0A0A0A",
+    "secondary_text": "#555555",
+    "accent": "#000000",
+    "border": "#E5E5E5",
+    "interactive_hover": "#1A1A1A",
+    "error": "#990000"
+  },
+  "typography": {
+    "heading_font": "Cormorant Garamond, serif",
+    "body_font": "Manrope, sans-serif",
+    "hierarchy": {
+      "h1": "text-6xl md:text-8xl tracking-tighter uppercase font-medium",
+      "h2": "text-4xl md:text-5xl tracking-tight font-medium",
+      "h3": "text-2xl md:text-3xl tracking-tight",
+      "body": "text-base tracking-wide leading-relaxed",
+      "labels": "text-xs tracking-[0.2em] uppercase font-semibold"
+    },
+    "instructions": "Use Cormorant Garamond for all primary headings, particularly in italicized accents to create an editorial feel. Use Manrope for all UI, pricing, and functional elements."
+  },
+  "layouts": {
+    "container": "max-w-[1800px] mx-auto px-4 md:px-8 lg:px-12",
+    "hero": "h-screen w-full flex flex-col justify-end pb-12 relative overflow-hidden",
+    "product_grid": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16",
+    "editorial_bento": "grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8",
+    "pdp_layout": "grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 min-h-screen"
+  },
+  "visual_enhancers": {
+    "borders": "1px solid #E5E5E5, strict rectangular geometry (rounded-none for all UI elements).",
+    "shadows": "None. Rely on borders and high contrast for separation. Minimal drop shadow only on the cart drawer or sticky header.",
+    "hover_effects": "Images scale up slightly (1.05) inside an overflow-hidden container. Buttons invert colors (black to white, white to black)."
+  },
+  "motion": {
+    "libraries_required": ["framer-motion", "lenis"],
+    "hero_reveal": "Kinetic text reveal: words translated up from behind an overflow-hidden mask with staggered delays.",
+    "scroll_animations": "Fade in and slight upward translation (y: 20 -> 0) on scroll using Framer Motion whileInView.",
+    "parallax": "Use Framer Motion useScroll and useTransform for subtle background image parallax in hero and large editorial banners.",
+    "smooth_scroll": "Implement standard Lenis smooth scrolling wrapper at the root."
+  },
+  "components": {
+    "Button": "Sharp corners (rounded-none), border border-black, px-8 py-3. Default: bg-black text-white. Outline: bg-transparent text-black.",
+    "ProductCard": "Aspect ratio 3:4 or 4:5 image. Minimal text below: Title left, Price right, in Manrope. Hidden 'Quick Add' button reveals on image hover.",
+    "Header": "Sticky, fixed top, bg-white/80 backdrop-blur-md, border-b border-gray-200. Clear typography, simple flex layout.",
+    "Marquee": "Editorial ribbon using react-fast-marquee. Massive text or elegant small serif ribbon. Example: 'NEW ARRIVALS — THE SPRING EDIT — FREE SHIPPING'."
+  },
+  "image_urls": {
+    "hero_women": {
+      "url": "https://images.pexels.com/photos/31630337/pexels-photo-31630337.jpeg",
+      "description": "Full body editorial pose, female model in Berlin studio, perfect for the main landing page hero."
+    },
+    "hero_men": {
+      "url": "https://images.pexels.com/photos/13885989/pexels-photo-13885989.jpeg",
+      "description": "Stylish male model posing in beige coat, perfect for the Men's category highlight."
+    },
+    "editorial_accent": {
+      "url": "https://images.unsplash.com/photo-1629511565591-a1d494ad6c58",
+      "description": "Woman in black blazer, great for secondary banner or manifesto section."
+    },
+    "products_men": [
+      "https://images.unsplash.com/photo-1732464517792-7385024242a6",
+      "https://images.pexels.com/photos/9464234/pexels-photo-9464234.jpeg",
+      "https://images.pexels.com/photos/8408556/pexels-photo-8408556.jpeg"
+    ],
+    "products_women": [
+      "https://images.pexels.com/photos/16297726/pexels-photo-16297726.jpeg",
+      "https://images.pexels.com/photos/17938771/pexels-photo-17938771.jpeg"
+    ],
+    "accessories": [
+      "https://images.unsplash.com/photo-1614676471928-2ed0ad1061a4",
+      "https://images.pexels.com/photos/9065153/pexels-photo-9065153.jpeg"
+    ]
+  },
+  "accessibility": {
+    "contrast": "Ensure all text over images has a slight gradient overlay or text-shadow if necessary. Maintain 4.5:1 ratio.",
+    "testing_attributes": "All interactive elements (buttons, links, form inputs) must have data-testid attributes."
+  },
+  "tech_stack": {
+    "framework": "React (Vite/Next), Tailwind CSS",
+    "icons": "lucide-react (stroke-width 1 or 1.5 for elegance)",
+    "state": "Zustand or React Context + localStorage for Cart and Wishlist",
+    "components": "shadcn/ui (heavily customized for 'rounded-none' and pure black/white)"
+  },
+  "instructions_to_main_agent": [
+    "Install required dependencies: framer-motion, @studio-freight/react-lenis (or lenis), react-fast-marquee, lucide-react.",
+    "Configure Tailwind to include Cormorant Garamond and Manrope.",
+    "Remove all 'rounded' classes from shadcn components. The brand is strictly sharp corners.",
+    "Build the Kinetic Hero: Use Framer Motion to mask and slide up massive typography on load.",
+    "Implement Lenis smooth scrolling in a global wrapper.",
+    "Create a responsive Navbar with a search overlay, cart drawer, and login modal.",
+    "Build product listing pages with filtering/sorting UI.",
+    "Build the product detail page with sticky images on the left and scrolling details on the right.",
+    "Ensure all state (cart, wishlist) persists in localStorage using a custom hook or context.",
+    "Apply 'data-testid' to all buttons, inputs, and major sections."
+  ],
+  "universal_guidelines": {
+    "avoid_slop": "Do not use generic centered layouts or simplistic gradients. Create depth with stark contrast and typography.",
+    "no_emoji": "Never use AI emojis as icons.",
+    "spacing": "Use p-8, p-12, p-24 aggressively to create editorial whitespace.",
+    "animations": "Every hover should have a purpose (e.g., image scale, button color invert). Entrance animations are mandatory for product grids."
+  }
+}
