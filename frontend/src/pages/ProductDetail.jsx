@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Minus, Plus, ChevronDown } from 'lucide-react';
-import { findProduct, price, PRODUCTS } from '@/data/products';
+import { price } from '@/data/products';
 import { useStore } from '@/context/StoreContext';
 import { ProductCard } from '@/components/ProductCard';
 import { MaskedLine, Reveal, SectionHeading } from '@/components/Reveal';
@@ -25,8 +25,8 @@ const Accordion = ({ title, children, testid }) => {
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const { addToCart, toggleWishlist, wishlist, findProduct, products } = useStore();
   const p = findProduct(id);
-  const { addToCart, toggleWishlist, wishlist } = useStore();
   const [size, setSize] = useState(null);
   const [qty, setQty] = useState(1);
   const [error, setError] = useState(false);
@@ -43,7 +43,7 @@ export default function ProductDetail() {
   }
 
   const saved = wishlist.includes(p.id);
-  const related = PRODUCTS.filter((x) => x.gender === p.gender && x.id !== p.id).slice(0, 4);
+  const related = products.filter((x) => x.gender === p.gender && x.id !== p.id).slice(0, 4);
 
   const add = () => {
     if (!size) { setError(true); return; }

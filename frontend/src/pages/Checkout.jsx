@@ -1,30 +1,42 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Check, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import { useStore } from '@/context/StoreContext';
-import { findProduct, price } from '@/data/products';
+import { price } from '@/data/products';
 import { Reveal, MaskedLine } from '@/components/Reveal';
 
 const inputCls = 'w-full border border-line bg-white px-4 py-3.5 text-sm outline-none transition-colors duration-300 focus:border-ink';
 
 export default function Checkout() {
-  const { cart, subtotal, clearCart } = useStore();
-  const navigate = useNavigate();
-  const [orderId, setOrderId] = useState(null);
+  const { cartItems, subtotal, shipping, total, placeOrder } = useStore();
+  const [order, setOrder] = useState(null);
+  const [placing, setPlacing] = useState(false);
   const [form, setForm] = useState({ email: '', first: '', last: '', address: '', city: '', zip: '', country: 'United States' });
-
-  const shipping = subtotal >= 150 || subtotal === 0 ? 0 : 9;
-  const total = subtotal + shipping;
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setOrderId(`EB-${Math.floor(100000 + Math.random() * 900000)}`);
-    clearCart();
+    setPlacing(true);
+    try {
+      const placed = await placeOrder({
+        email: form.email,
+        first_name: form.first,
+        last_name: form.last,
+        address: form.address,
+        city: form.city,
+        zip: form.zip,
+        country: form.country,
+      });
+      setOrder(placed);
+    } catch (err) {
+      toast.error(err.message || 'Could not place your order');
+    }
+    setPlacing(false);
   };
 
-  if (orderId) {
+  if (order) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-4 pt-[104px] text-center" data-testid="order-success">
         <Reveal>
@@ -32,8 +44,8 @@ export default function Checkout() {
             <Check size={26} strokeWidth={1.5} />
           </span>
           <h1 className="mt-8 font-display text-5xl font-medium tracking-tight md:text-7xl">Order <span className="italic font-normal">confirmed</span></h1>
-          <p className="mt-6 text-sm text-neutral-500">Thank you — your order <span data-testid="order-number" className="font-semibold text-ink">{orderId}</span> is being prepared.</p>
-          <p className="mt-2 text-xs text-neutral-400">A confirmation has been sent to {form.email} (demo).</p>
+          <p className="mt-6 text-sm text-neutral-500">Thank you — your order <span data-testid="order-number" className="font-semibold text-ink">{order.order_number}</span> is being prepared.</p>
+          <p className="mt-2 text-xs text-neutral-400">Total {price(order.total)} — a confirmation has been sent to {order.customer.email}.</p>
           <Link to="/" data-testid="order-success-home-button"
             className="mt-10 inline-block bg-ink px-10 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800">
             Back to EasyBuy
@@ -43,7 +55,7 @@ export default function Checkout() {
     );
   }
 
-  if (cart.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 pt-[104px] text-center" data-testid="checkout-empty">
         <p className="font-display text-4xl italic text-neutral-400">Nothing to check out yet.</p>
@@ -89,7 +101,7 @@ export default function Checkout() {
           <Reveal delay={0.1}>
             <h2 className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]"><span className="font-display text-xl italic text-neutral-300">03</span> Payment</h2>
             <div className="mt-5 border border-dashed border-line p-6 text-sm text-neutral-400" data-testid="payment-placeholder">
-              <p className="flex items-center gap-2"><Lock size={14} strokeWidth={1.5} /> Payment integration arrives with the backend — this demo completes the order without charge.</p>
+              <p className="flex items-center gap-2"><Lock size={14} strokeWidth={1.5} /> Payment integration arrives next — orders are confirmed and saved without charge for now.</p>
             </div>
           </Reveal>
         </div>
@@ -98,32 +110,28 @@ export default function Checkout() {
           <Reveal className="border border-line p-8 lg:sticky lg:top-32">
             <h2 className="text-xs font-semibold uppercase tracking-[0.3em]">Your Order</h2>
             <div className="mt-6 space-y-4">
-              {cart.map((it) => {
-                const p = findProduct(it.id);
-                if (!p) return null;
-                return (
-                  <div key={`${it.id}-${it.size}`} className="flex items-center gap-4" data-testid={`checkout-item-${it.id}-${it.size}`}>
-                    <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-paper">
-                      <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
-                      <span className="absolute right-0 top-0 bg-ink px-1.5 py-0.5 text-[9px] font-bold text-white">{it.qty}</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{p.name}</p>
-                      <p className="text-xs text-neutral-400">Size {it.size}</p>
-                    </div>
-                    <p className="text-sm font-semibold">{price(p.price * it.qty)}</p>
+              {cartItems.map((it) => (
+                <div key={`${it.product_id}-${it.size}`} className="flex items-center gap-4" data-testid={`checkout-item-${it.product_id}-${it.size}`}>
+                  <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-paper">
+                    <img src={it.product.image} alt={it.product.name} className="h-full w-full object-cover" />
+                    <span className="absolute right-0 top-0 bg-ink px-1.5 py-0.5 text-[9px] font-bold text-white">{it.qty}</span>
                   </div>
-                );
-              })}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{it.product.name}</p>
+                    <p className="text-xs text-neutral-400">Size {it.size}</p>
+                  </div>
+                  <p className="text-sm font-semibold">{price(it.product.price * it.qty)}</p>
+                </div>
+              ))}
             </div>
             <div className="mt-6 space-y-3 border-t border-line pt-6 text-sm">
               <div className="flex justify-between"><span className="text-neutral-500">Subtotal</span><span className="font-semibold">{price(subtotal)}</span></div>
               <div className="flex justify-between"><span className="text-neutral-500">Shipping</span><span className="font-semibold">{shipping === 0 ? 'Free' : price(shipping)}</span></div>
               <div className="flex justify-between border-t border-line pt-4 text-base"><span>Total</span><span data-testid="checkout-total" className="font-bold">{price(total)}</span></div>
             </div>
-            <button type="submit" data-testid="place-order-button"
-              className="mt-8 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800">
-              Place Order — {price(total)}
+            <button type="submit" data-testid="place-order-button" disabled={placing}
+              className="mt-8 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800 disabled:opacity-60">
+              {placing ? 'Placing Order…' : `Place Order — ${price(total)}`}
             </button>
           </Reveal>
         </div>

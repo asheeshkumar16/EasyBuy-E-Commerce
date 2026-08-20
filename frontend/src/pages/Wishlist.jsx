@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '@/context/StoreContext';
-import { PRODUCTS } from '@/data/products';
 import { ProductCard } from '@/components/ProductCard';
 import { MaskedLine } from '@/components/Reveal';
 
 export default function Wishlist() {
-  const { wishlist } = useStore();
-  const items = PRODUCTS.filter((p) => wishlist.includes(p.id));
+  const { wishlist, products } = useStore();
+  const items = products.filter((p) => wishlist.includes(p.id));
 
   return (
     <div className="pt-[104px]" data-testid="wishlist-page">

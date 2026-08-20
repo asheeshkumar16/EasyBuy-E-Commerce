@@ -27,16 +27,22 @@ Build a modern, high-end eCommerce website named EasyBuy for a fashion apparel b
 - `/info/:page`: about, contact (form), faqs (accordion), privacy, terms
 - Overlays: search (live results), auth modal (login/signup UI only, demo), mobile menu
 
-## Implemented (2026-08-20)
-- Full storefront MVP as above, all 20 AI images generated, e2e verified (browse → PDP → size validation → cart → checkout → order confirmation EB-891846)
+## Implemented
+- 2026-08-20: Full storefront MVP, all 20 AI images generated, e2e verified (browse → PDP → size validation → cart → checkout → order confirmation EB-891846)
+- 2026-08-20: REAL BACKEND connected — FastAPI + MongoDB now powers the store:
+  - Products served from MongoDB (`GET /api/products` with gender/tag/category/q/sort filters, `GET /api/products/{id}`), seeded idempotently on startup
+  - Server-side anonymous carts (`POST/GET/DELETE /api/carts`, `POST/PATCH /api/carts/{id}/items`), cart id persisted in localStorage, enriched cart view with totals + free-shipping rule ($150)
+  - Real orders (`POST /api/orders`, `GET /api/orders/{order_number}`) — validated customer details (EmailStr), line-item snapshots, unique EB-XXXXXX numbers, cart cleared on order
+  - Frontend StoreContext now talks to the API (products fetched live, cart mutations synced server-side); wishlist stays local-only
+  - Verified: API chain (add/patch/order EB-466139, cart cleared), $9 shipping under $150, 400 empty-cart order, 404 unknown product, browser e2e order placed
 
 ## Backlog
-- P0: Backend APIs (products, cart, orders) + MongoDB models; JWT auth to replace demo login
-- P1: Real payment (Stripe), order persistence + order history page, email confirmations (Resend)
-- P1: Product variants (colors, multiple images), size guide modal
-- P2: Recently viewed, reviews, inventory states, admin panel, i18n/currency
+- P0: JWT auth to replace demo login; user-linked carts/wishlists/orders
+- P1: Real payment (Stripe), order history page, email confirmations (Resend)
+- P1: Admin product management (CRUD), product variants (colors, multiple images), size guide modal
+- P2: Recently viewed, reviews, inventory states, i18n/currency
 
 ## Next Tasks
-1. Build `/api/products`, `/api/orders` in FastAPI and swap frontend data source
-2. JWT auth (integration_expert playbook) replacing AuthModal demo
-3. Stripe checkout integration
+1. JWT auth (integration_expert playbook) replacing AuthModal demo
+2. Stripe checkout integration
+3. Order history + confirmation email

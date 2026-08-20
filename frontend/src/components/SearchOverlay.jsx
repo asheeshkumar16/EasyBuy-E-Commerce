@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
-import { PRODUCTS, price } from '@/data/products';
+import { price } from '@/data/products';
+import { useStore } from '@/context/StoreContext';
 
 export const SearchOverlay = ({ open, onClose }) => {
+  const { products } = useStore();
   const [q, setQ] = useState('');
 
   useEffect(() => {
@@ -16,8 +18,8 @@ export const SearchOverlay = ({ open, onClose }) => {
   useEffect(() => { if (!open) setQ(''); }, [open]);
 
   const results = q.trim()
-    ? PRODUCTS.filter((p) => `${p.name} ${p.category} ${p.gender}`.toLowerCase().includes(q.toLowerCase())).slice(0, 8)
-    : PRODUCTS.filter((p) => p.tags.includes('trending')).slice(0, 4);
+    ? products.filter((p) => `${p.name} ${p.category} ${p.gender}`.toLowerCase().includes(q.toLowerCase())).slice(0, 8)
+    : products.filter((p) => p.tags.includes('trending')).slice(0, 4);
 
   return (
     <AnimatePresence>

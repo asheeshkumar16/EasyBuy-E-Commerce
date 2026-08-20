@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PRODUCTS } from '@/data/products';
+import { useStore } from '@/context/StoreContext';
 import { ProductCard } from '@/components/ProductCard';
 import { MaskedLine, Reveal } from '@/components/Reveal';
 
@@ -14,10 +14,11 @@ const sorts = [
 
 export default function Shop() {
   const { gender = 'all' } = useParams();
+  const { products } = useStore();
   const [cat, setCat] = useState('All');
   const [sort, setSort] = useState('featured');
 
-  const base = useMemo(() => (gender === 'all' ? PRODUCTS : PRODUCTS.filter((p) => p.gender === gender)), [gender]);
+  const base = useMemo(() => (gender === 'all' ? products : products.filter((p) => p.gender === gender)), [gender]);
   const cats = useMemo(() => ['All', ...new Set(base.map((p) => p.category))], [base]);
 
   const items = useMemo(() => {

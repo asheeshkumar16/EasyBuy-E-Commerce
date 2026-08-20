@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { MaskedLine, Reveal, SectionHeading } from '@/components/Reveal';
 import { EditorialMarquee } from '@/components/EditorialMarquee';
 import { ProductCard } from '@/components/ProductCard';
-import { byTag } from '@/data/products';
+import { useStore } from '@/context/StoreContext';
 
 const IntroCurtain = ({ onDone }) => {
   useEffect(() => {
@@ -169,7 +169,9 @@ const PromoBanner = () => {
   );
 };
 
-const NewArrivalsRail = () => (
+const NewArrivalsRail = () => {
+  const { byTag } = useStore();
+  return (
   <section data-testid="new-arrivals-section" className="py-20 md:py-28">
     <div className="mx-auto max-w-[1800px] px-4 md:px-8 lg:px-12">
       <SectionHeading index="03" eyebrow="Just Landed" title={<>New <span className="italic font-normal">arrivals</span></>}
@@ -185,7 +187,8 @@ const NewArrivalsRail = () => (
       ))}
     </div>
   </section>
-);
+  );
+};
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
@@ -219,6 +222,7 @@ const Newsletter = () => {
 };
 
 export default function Home() {
+  const { byTag } = useStore();
   const [introDone, setIntroDone] = useState(false);
   return (
     <>
