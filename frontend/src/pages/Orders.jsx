@@ -7,11 +7,36 @@ import { AuthModal } from '@/components/AuthModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+const STATUS_LABELS = { awaiting_payment: 'Awaiting Payment', paid: 'Paid', shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled' };
+
 const StatusChip = ({ status }) => (
-  <span className={`px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] ${status === 'paid' ? 'bg-ink text-white' : 'border border-line text-neutral-500'}`}>
-    {status === 'paid' ? 'Paid' : 'Awaiting Payment'}
+  <span className={`px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] ${status === 'awaiting_payment' || status === 'cancelled' ? 'border border-line text-neutral-500' : 'bg-ink text-white'}`}>
+    {STATUS_LABELS[status] || status}
   </span>
 );
+
+const STEPS = ['Paid', 'Shipped', 'Delivered'];
+const STEP_INDEX = { paid: 0, shipped: 1, delivered: 2 };
+
+const OrderProgress = ({ status, testid }) => {
+  const idx = STEP_INDEX[status];
+  if (idx === undefined) return null;
+  return (
+    <div data-testid={testid} className="flex items-center border-b border-line px-6 py-5">
+      {STEPS.map((s, i) => (
+        <div key={s} className="flex flex-1 items-center last:flex-none">
+          <div className="flex items-center gap-2">
+            <span className={`flex h-5 w-5 items-center justify-center border text-[9px] font-bold ${i <= idx ? 'border-ink bg-ink text-white' : 'border-line text-neutral-300'}`}>
+              {i + 1}
+            </span>
+            <span className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${i <= idx ? 'text-ink' : 'text-neutral-300'}`}>{s}</span>
+          </div>
+          {i < STEPS.length - 1 && <span className={`mx-3 h-px flex-1 ${i < idx ? 'bg-ink' : 'bg-line'}`} />}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function Orders() {
   const { user, apiFetch } = useStore();
@@ -86,6 +111,7 @@ export default function Orders() {
                       <p className="text-sm font-bold">{price(o.total)}</p>
                     </div>
                   </div>
+                  <OrderProgress status={o.status} testid={`order-progress-${o.order_number}`} />
                   <div className="divide-y divide-line">
                     {o.items.map((it) => (
                       <div key={`${o.order_number}-${it.product_id}-${it.size}`} className="flex items-center gap-4 px-6 py-4">

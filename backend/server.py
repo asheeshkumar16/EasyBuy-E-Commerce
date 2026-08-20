@@ -7,6 +7,7 @@ import os
 import re
 import logging
 import random
+import secrets
 import ipaddress
 from html import escape
 from html.parser import HTMLParser
@@ -541,6 +542,72 @@ async def refresh(request: Request, response: Response):
     return {"ok": True}
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str = Field(min_length=6, max_length=128)
+
+
+def reset_email_html(token: str) -> str:
+    link = f"{FRONTEND_URL}/reset-password?token={token}"
+    return (
+        '<table role="presentation" width="100%" style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;color:#0A0A0A">'
+        f'<tr><td style="padding:32px 24px;border-bottom:2px solid #0A0A0A"><span style="font-size:20px;font-weight:800;letter-spacing:6px">EASYBUY</span></td></tr>'
+        '<tr><td style="padding:24px"><p style="font-size:15px">We received a request to reset your EasyBuy password.</p>'
+        '<p style="font-size:13px;color:#555">This link expires in one hour. If you did not request it, you can safely ignore this email — your password stays unchanged.</p></td></tr>'
+        f'<tr><td style="padding:0 24px 24px"><a href="{escape(link)}" style="display:inline-block;background:#0A0A0A;color:#ffffff;padding:12px 28px;font-size:12px;letter-spacing:3px;text-decoration:none">RESET YOUR PASSWORD</a></td></tr>'
+        f'<tr><td style="padding:16px 24px;border-top:1px solid #eee;font-size:11px;color:#999">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password or card details by email.</td></tr>'
+        '</table>'
+    )
+
+
+async def send_password_reset_email(email: str, token: str):
+    return await send_email(to=email, subject="Reset your EasyBuy password", html=reset_email_html(token))
+
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(payload: ForgotPasswordRequest):
+    email = payload.email.lower()
+    user = await db.users.find_one({"email": email})
+    if user:
+        token = secrets.token_urlsafe(32)
+        await db.password_reset_tokens.insert_one({
+            "token": token,
+            "email": email,
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
+            "used": False,
+        })
+        await send_password_reset_email(email, token)
+    return {"ok": True}
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(payload: ResetPasswordRequest):
+    rec = await db.password_reset_tokens.find_one({"token": payload.token})
+    if not rec or rec.get("used"):
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+    expires = rec["expires_at"]
+    if isinstance(expires, str):
+        expires = datetime.fromisoformat(expires)
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+    await db.users.update_one({"email": rec["email"]}, {"$set": {"password_hash": hash_password(payload.password)}})
+    await db.password_reset_tokens.update_one({"token": payload.token}, {"$set": {"used": True}})
+    return {"ok": True}
+
+
+async def require_admin(request: Request) -> dict:
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
 # ---------------- Cart routes ----------------
 @api_router.post("/carts")
 async def create_cart(request: Request):
@@ -710,6 +777,36 @@ async def get_order(order_number: str):
     return OrderDocument.from_mongo(doc).model_dump()
 
 
+# ---------------- Admin routes ----------------
+class OrderStatusUpdate(BaseModel):
+    status: str
+
+
+ALLOWED_ORDER_STATUSES = {"awaiting_payment", "paid", "shipped", "delivered", "cancelled"}
+
+
+@api_router.get("/admin/orders")
+async def admin_orders(admin=Depends(require_admin)):
+    docs = await db.orders.find().sort("created_at", -1).to_list(200)
+    return [OrderDocument.from_mongo(d).model_dump() for d in docs]
+
+
+@api_router.patch("/orders/{order_number}/status")
+async def update_order_status(order_number: str, payload: OrderStatusUpdate, admin=Depends(require_admin)):
+    if payload.status not in ALLOWED_ORDER_STATUSES:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    update = {"status": payload.status, "updated_at": datetime.now(timezone.utc).isoformat()}
+    if payload.status == "shipped":
+        update["shipped_at"] = update["updated_at"]
+    if payload.status == "delivered":
+        update["delivered_at"] = update["updated_at"]
+    result = await db.orders.update_one({"order_number": order_number}, {"$set": update})
+    if not result.matched_count:
+        raise HTTPException(status_code=404, detail="Order not found")
+    doc = await db.orders.find_one({"order_number": order_number})
+    return OrderDocument.from_mongo(doc).model_dump()
+
+
 # ---------------- Payment routes (Stripe, Flow B) ----------------
 def stripe_client(request: Request) -> StripeCheckout:
     host_url = str(request.base_url)
@@ -782,6 +879,7 @@ async def seed_database():
     await db.orders.create_index("order_number", unique=True)
     await db.users.create_index("email", unique=True)
     await db.login_attempts.create_index("identifier")
+    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
     await db.payment_transactions.create_index("session_id", unique=True)
     if await db.products.count_documents({}) == 0:
         await db.products.insert_many(SEED_PRODUCTS)

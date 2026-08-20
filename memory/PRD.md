@@ -42,14 +42,18 @@ Build a modern, high-end eCommerce website named EasyBuy for a fashion apparel b
   - My Orders page (/orders) lists a shopper's orders with status/totals
   - Resend order confirmation email (managed, from_name EasyBuy, reply-to easybuy@gmail.com) sent on payment, guardrail gate enforced
   - Verified live: register/login/me/admin login, merge, wishlist toggle/sync, order EB-690651 → real Stripe card payment (4242) → paid → email id 9b498982 accepted (202) → cart cleared → My Orders shows PAID; UI sign-in/sign-out/dropdown all pass
+- 2026-08-20: PASSWORD RESET + ORDER TRACKING:
+  - Forgot/reset password: /api/auth/forgot-password (single-use 1h token in password_reset_tokens, TTL index, branded reset email via Resend), /api/auth/reset-password; UI: "Forgot your password?" in auth modal + /reset-password page
+  - Order tracking: PATCH /api/orders/{n}/status (admin-only, require_admin), GET /api/admin/orders; statuses paid→shipped→delivered with timestamps; /admin "Order Desk" page with Mark Shipped/Delivered; My Orders shows Paid→Shipped→Delivered progress tracker
+  - Verified: full reset round-trip (token single-use, expiry, login with new password, reset email accepted 202 after a transient proxy 422), admin 403 for non-admins, ship→deliver flow visible to shopper
 
 ## Backlog
 - P0: Nothing blocking — core commerce loop complete
-- P1: Claim a dedicated Stripe account (KYC) before deploy; forgot/reset password flow; order status updates (shipped/delivered) + admin panel
+- P1: Claim a dedicated Stripe account (KYC) before deploy; shipping/delivery notification emails; admin product management (CRUD)
 - P1: Product variants (colors, multiple images), size guide modal, inventory
-- P2: Recently viewed, reviews, i18n/currency, refunds UI
+- P2: Refunds UI, recently viewed, reviews, i18n/currency
 
 ## Next Tasks
-1. User completes Stripe KYC / claims account for live keys
-2. Forgot-password flow (reset token endpoints exist in playbook)
-3. Admin order management (mark shipped, refund)
+1. Shipping/delivery status emails to shoppers on status change
+2. User completes Stripe KYC / claims account for live keys
+3. Admin product CRUD

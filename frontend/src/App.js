@@ -13,6 +13,8 @@ import Checkout from '@/pages/Checkout';
 import Wishlist from '@/pages/Wishlist';
 import InfoPage from '@/pages/InfoPage';
 import Orders from '@/pages/Orders';
+import Admin from '@/pages/Admin';
+import ResetPassword from '@/pages/ResetPassword';
 import { PaymentSuccess, PaymentCancel } from '@/pages/PaymentResult';
 import '@/App.css';
 
@@ -57,6 +59,8 @@ function App() {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/cancel" element={<PaymentCancel />} />
               <Route path="/info/:page" element={<InfoPage />} />

@@ -73,6 +73,12 @@ export const Navbar = () => {
                             className="block px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-200 hover:bg-paper">
                             My Orders
                           </Link>
+                          {user.role === 'admin' && (
+                            <Link to="/admin" data-testid="admin-link" onClick={() => setAcctOpen(false)}
+                              className="block px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-200 hover:bg-paper">
+                              Admin
+                            </Link>
+                          )}
                           <button data-testid="logout-button" onClick={() => { logout(); setAcctOpen(false); }}
                             className="w-full px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-200 hover:bg-paper">
                             Sign Out
