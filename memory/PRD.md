@@ -35,14 +35,21 @@ Build a modern, high-end eCommerce website named EasyBuy for a fashion apparel b
   - Real orders (`POST /api/orders`, `GET /api/orders/{order_number}`) — validated customer details (EmailStr), line-item snapshots, unique EB-XXXXXX numbers, cart cleared on order
   - Frontend StoreContext now talks to the API (products fetched live, cart mutations synced server-side); wishlist stays local-only
   - Verified: API chain (add/patch/order EB-466139, cart cleared), $9 shipping under $150, 400 empty-cart order, 404 unknown product, browser e2e order placed
+- 2026-08-20: TRUE ACCOUNTS + STRIPE + ORDER HISTORY + ORDER EMAILS:
+  - JWT auth (bcrypt, httpOnly access+refresh cookies, /api/auth register/login/logout/me/refresh, brute-force lockout 5 tries/15 min, admin seed)
+  - Carts bind to users on login (guest cart merges into account via /api/carts/merge, /api/carts/mine); wishlist server-backed per user with local→server sync
+  - Stripe payments (Flow B, emergentintegrations StripeCheckout, shared test sandbox — claimable sandbox unavailable in this region): order → checkout session → redirect → status polling + /api/webhook/stripe, order flips to paid, cart clears
+  - My Orders page (/orders) lists a shopper's orders with status/totals
+  - Resend order confirmation email (managed, from_name EasyBuy, reply-to easybuy@gmail.com) sent on payment, guardrail gate enforced
+  - Verified live: register/login/me/admin login, merge, wishlist toggle/sync, order EB-690651 → real Stripe card payment (4242) → paid → email id 9b498982 accepted (202) → cart cleared → My Orders shows PAID; UI sign-in/sign-out/dropdown all pass
 
 ## Backlog
-- P0: JWT auth to replace demo login; user-linked carts/wishlists/orders
-- P1: Real payment (Stripe), order history page, email confirmations (Resend)
-- P1: Admin product management (CRUD), product variants (colors, multiple images), size guide modal
-- P2: Recently viewed, reviews, inventory states, i18n/currency
+- P0: Nothing blocking — core commerce loop complete
+- P1: Claim a dedicated Stripe account (KYC) before deploy; forgot/reset password flow; order status updates (shipped/delivered) + admin panel
+- P1: Product variants (colors, multiple images), size guide modal, inventory
+- P2: Recently viewed, reviews, i18n/currency, refunds UI
 
 ## Next Tasks
-1. JWT auth (integration_expert playbook) replacing AuthModal demo
-2. Stripe checkout integration
-3. Order history + confirmation email
+1. User completes Stripe KYC / claims account for live keys
+2. Forgot-password flow (reset token endpoints exist in playbook)
+3. Admin order management (mark shipped, refund)

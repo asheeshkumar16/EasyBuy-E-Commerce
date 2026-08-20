@@ -2,14 +2,28 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useStore } from '@/context/StoreContext';
 
 export const AuthModal = ({ open, onClose }) => {
+  const { login, register } = useStore();
   const [tab, setTab] = useState('login');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    toast.success(tab === 'login' ? 'Signed in — welcome back to EasyBuy (demo)' : 'Account created — welcome to EasyBuy (demo)');
+    setBusy(true);
+    setError('');
+    const res = tab === 'login'
+      ? await login(form.email, form.password)
+      : await register(form.name, form.email, form.password);
+    setBusy(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    toast.success(tab === 'login' ? `Welcome back, ${res.user.name}` : `Welcome to EasyBuy, ${res.user.name}`);
     onClose();
     setForm({ name: '', email: '', password: '' });
   };
@@ -31,7 +45,7 @@ export const AuthModal = ({ open, onClose }) => {
             <h2 className="mt-2 font-display text-4xl italic">{tab === 'login' ? 'Welcome back' : 'Join EasyBuy'}</h2>
             <div className="mt-8 grid grid-cols-2 border border-line">
               {['login', 'signup'].map((t) => (
-                <button key={t} data-testid={`auth-tab-${t}`} onClick={() => setTab(t)}
+                <button key={t} data-testid={`auth-tab-${t}`} onClick={() => { setTab(t); setError(''); }}
                   className={`py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-300 ${tab === t ? 'bg-ink text-white' : 'bg-white text-neutral-500 hover:text-ink'}`}>
                   {t === 'login' ? 'Sign In' : 'Sign Up'}
                 </button>
@@ -44,14 +58,15 @@ export const AuthModal = ({ open, onClose }) => {
               )}
               <input data-testid="auth-email-input" required type="email" placeholder="Email address" value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} />
-              <input data-testid="auth-password-input" required type="password" minLength={6} placeholder="Password" value={form.password}
+              <input data-testid="auth-password-input" required type="password" minLength={6} placeholder="Password (6+ characters)" value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputCls} />
-              <button data-testid="auth-submit-button" type="submit"
-                className="w-full bg-ink py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800">
-                {tab === 'login' ? 'Sign In' : 'Create Account'}
+              {error && <p data-testid="auth-error" className="text-xs font-semibold text-red-800">{error}</p>}
+              <button data-testid="auth-submit-button" type="submit" disabled={busy}
+                className="w-full bg-ink py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800 disabled:opacity-60">
+                {busy ? 'One moment…' : tab === 'login' ? 'Sign In' : 'Create Account'}
               </button>
             </form>
-            <p className="mt-6 text-center text-xs text-neutral-400">Demo interface — accounts connect to the backend later.</p>
+            <p className="mt-6 text-center text-xs text-neutral-400">Your bag and wishlist follow your account across devices.</p>
           </motion.div>
         </motion.div>
       )}

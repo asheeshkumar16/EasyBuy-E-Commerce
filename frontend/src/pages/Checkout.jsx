@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStore } from '@/context/StoreContext';
 import { price } from '@/data/products';
@@ -9,8 +9,7 @@ import { Reveal, MaskedLine } from '@/components/Reveal';
 const inputCls = 'w-full border border-line bg-white px-4 py-3.5 text-sm outline-none transition-colors duration-300 focus:border-ink';
 
 export default function Checkout() {
-  const { cartItems, subtotal, shipping, total, placeOrder } = useStore();
-  const [order, setOrder] = useState(null);
+  const { cartItems, subtotal, shipping, total, placeOrder, startPayment } = useStore();
   const [placing, setPlacing] = useState(false);
   const [form, setForm] = useState({ email: '', first: '', last: '', address: '', city: '', zip: '', country: 'United States' });
 
@@ -29,31 +28,13 @@ export default function Checkout() {
         zip: form.zip,
         country: form.country,
       });
-      setOrder(placed);
+      const payment = await startPayment(placed.order_number);
+      window.location.href = payment.checkout_url;
     } catch (err) {
-      toast.error(err.message || 'Could not place your order');
+      toast.error(err.message || 'Could not start payment');
+      setPlacing(false);
     }
-    setPlacing(false);
   };
-
-  if (order) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-4 pt-[104px] text-center" data-testid="order-success">
-        <Reveal>
-          <span className="mx-auto flex h-16 w-16 items-center justify-center border border-ink">
-            <Check size={26} strokeWidth={1.5} />
-          </span>
-          <h1 className="mt-8 font-display text-5xl font-medium tracking-tight md:text-7xl">Order <span className="italic font-normal">confirmed</span></h1>
-          <p className="mt-6 text-sm text-neutral-500">Thank you — your order <span data-testid="order-number" className="font-semibold text-ink">{order.order_number}</span> is being prepared.</p>
-          <p className="mt-2 text-xs text-neutral-400">Total {price(order.total)} — a confirmation has been sent to {order.customer.email}.</p>
-          <Link to="/" data-testid="order-success-home-button"
-            className="mt-10 inline-block bg-ink px-10 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800">
-            Back to EasyBuy
-          </Link>
-        </Reveal>
-      </div>
-    );
-  }
 
   if (cartItems.length === 0) {
     return (
@@ -100,8 +81,9 @@ export default function Checkout() {
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em]"><span className="font-display text-xl italic text-neutral-300">03</span> Payment</h2>
-            <div className="mt-5 border border-dashed border-line p-6 text-sm text-neutral-400" data-testid="payment-placeholder">
-              <p className="flex items-center gap-2"><Lock size={14} strokeWidth={1.5} /> Payment integration arrives next — orders are confirmed and saved without charge for now.</p>
+            <div className="mt-5 flex items-center gap-3 border border-line bg-paper p-6 text-sm text-neutral-500" data-testid="payment-placeholder">
+              <Lock size={14} strokeWidth={1.5} />
+              <p>You will be redirected to Stripe's secure checkout to pay by card. Your order is saved before you pay.</p>
             </div>
           </Reveal>
         </div>
@@ -131,7 +113,7 @@ export default function Checkout() {
             </div>
             <button type="submit" data-testid="place-order-button" disabled={placing}
               className="mt-8 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-neutral-800 disabled:opacity-60">
-              {placing ? 'Placing Order…' : `Place Order — ${price(total)}`}
+              {placing ? 'Redirecting to Payment…' : `Pay Securely — ${price(total)}`}
             </button>
           </Reveal>
         </div>

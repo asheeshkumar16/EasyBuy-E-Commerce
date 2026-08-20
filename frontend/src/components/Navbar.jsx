@@ -20,8 +20,9 @@ const CountBadge = ({ n, testid }) =>
   ) : null;
 
 export const Navbar = () => {
-  const { cartCount, wishlist } = useStore();
+  const { cartCount, wishlist, user, logout } = useStore();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [acctOpen, setAcctOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -54,9 +55,38 @@ export const Navbar = () => {
               <button data-testid="nav-search-button" onClick={() => setSearchOpen(true)} aria-label="Search" className="transition-transform duration-300 hover:scale-110">
                 <Search size={19} strokeWidth={1.5} />
               </button>
-              <button data-testid="nav-account-button" onClick={() => setAuthOpen(true)} aria-label="Account" className="hidden transition-transform duration-300 hover:scale-110 sm:block">
-                <User size={19} strokeWidth={1.5} />
-              </button>
+              {user ? (
+                <div className="relative hidden sm:block">
+                  <button data-testid="nav-account-button" onClick={() => setAcctOpen(!acctOpen)} aria-label="Account" className="transition-transform duration-300 hover:scale-110">
+                    <User size={19} strokeWidth={1.5} />
+                  </button>
+                  <AnimatePresence>
+                    {acctOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setAcctOpen(false)} />
+                        <motion.div data-testid="account-menu" className="absolute right-0 top-9 z-50 w-60 border border-line bg-white shadow-sm"
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.25 }}>
+                          <p className="border-b border-line px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+                            Signed in as<br /><span className="text-xs font-semibold normal-case tracking-normal text-ink">{user.email}</span>
+                          </p>
+                          <Link to="/orders" data-testid="my-orders-link" onClick={() => setAcctOpen(false)}
+                            className="block px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-200 hover:bg-paper">
+                            My Orders
+                          </Link>
+                          <button data-testid="logout-button" onClick={() => { logout(); setAcctOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-200 hover:bg-paper">
+                            Sign Out
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <button data-testid="nav-account-button" onClick={() => setAuthOpen(true)} aria-label="Account" className="hidden transition-transform duration-300 hover:scale-110 sm:block">
+                  <User size={19} strokeWidth={1.5} />
+                </button>
+              )}
               <Link to="/wishlist" data-testid="nav-wishlist-button" aria-label="Wishlist" className="relative hidden transition-transform duration-300 hover:scale-110 sm:block">
                 <Heart size={19} strokeWidth={1.5} />
                 <CountBadge n={wishlist.length} testid="wishlist-count" />

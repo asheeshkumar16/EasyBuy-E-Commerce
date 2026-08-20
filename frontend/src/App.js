@@ -12,6 +12,8 @@ import Cart from '@/pages/Cart';
 import Checkout from '@/pages/Checkout';
 import Wishlist from '@/pages/Wishlist';
 import InfoPage from '@/pages/InfoPage';
+import Orders from '@/pages/Orders';
+import { PaymentSuccess, PaymentCancel } from '@/pages/PaymentResult';
 import '@/App.css';
 
 const ScrollManager = () => {
@@ -54,6 +56,9 @@ function App() {
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/cancel" element={<PaymentCancel />} />
               <Route path="/info/:page" element={<InfoPage />} />
               <Route path="*" element={<Home />} />
             </Routes>
